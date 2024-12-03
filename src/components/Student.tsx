@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student as StudentType } from '../types/Student';
 import AddNewStudent from './AddNewStudent';
 import FirstName from './FirstName';
@@ -10,18 +10,39 @@ import Scholarship from './Scholarship';
 import Grades from './Grades';
 
 const Student: React.FC = () => {
-  const [students, setStudents] = useState<StudentType[]>([
-    {
-      id: 1,
-      firstName: 'Jan',
-      lastName: 'Kowalski',
-      dateOfBirth: '1995-05-15',
-      address: 'ul. Kwiatowa 10, Warszawa',
-      group: 'Informatyka',
-      scholarship: true,
-      grades: [5, 4, 5, 3],
-    },
-  ]);
+  const getInitialStudents = (): StudentType[] => {
+    const storedStudents = localStorage.getItem('students');
+    if (storedStudents) {
+      try {
+        return JSON.parse(storedStudents);
+      } catch (error) {
+        console.error('Błąd parsowania danych z localStorage:', error);
+      }
+    }
+    return [
+      {
+        id: 1,
+        firstName: 'Jan',
+        lastName: 'Kowalski',
+        dateOfBirth: '1995-05-15',
+        address: 'ul. Kwiatowa 10, Warszawa',
+        group: 'Informatyka',
+        scholarship: true,
+        grades: [5, 4, 5, 3],
+      },
+    ];
+  };
+
+  const [students, setStudents] = useState<StudentType[]>(getInitialStudents);
+
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('students', JSON.stringify(students));
+    } catch (error) {
+      console.error('Błąd zapisywania do localStorage:', error);
+    }
+  }, [students]);
 
   const addGrade = (studentId: number, grade: number) => {
     setStudents((prevStudents) =>
@@ -50,6 +71,11 @@ const Student: React.FC = () => {
     setStudents([...students, student]);
   };
 
+  const removeStudent = (studentId: number) => {
+    setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+  };
+  
+
   return (
     <div>
       <h1>Lista Studentów</h1>
@@ -63,6 +89,7 @@ const Student: React.FC = () => {
             padding: '10px',
           }}
         >
+          
           <FirstName firstName={student.firstName} />
           <LastName lastName={student.lastName} />
           <DateOfBirth dateOfBirth={student.dateOfBirth} />
